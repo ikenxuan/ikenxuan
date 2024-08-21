@@ -1,5 +1,5 @@
 ## Hi there 👋
-
+![img](https://raw.githubusercontent.com/ikenxuan/ikenxuan/output/github-contribution-grid-snake.svg)
 <!--
 **ikenxuan/ikenxuan** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
 
