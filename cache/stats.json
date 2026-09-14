@@ -1,7 +1,7 @@
 {
  "login": "ikenxuan",
  "name": "炫炫",
- "repos": 20,
+ "repos": 7,
  "stars": 188,
  "commits_12mo": 1154,
  "followers": 20,
@@ -9,24 +9,19 @@
  "created_at": "2022-08-30",
  "languages": [
   {
-   "name": "TypeScript",
-   "color": "#3178c6",
-   "size": 12879684
-  },
-  {
    "name": "JavaScript",
    "color": "#f1e05a",
-   "size": 12242343
+   "size": 11288060
   },
   {
-   "name": "HTML",
-   "color": "#e34c26",
-   "size": 2416301
+   "name": "TypeScript",
+   "color": "#3178c6",
+   "size": 3559991
   },
   {
    "name": "CSS",
    "color": "#663399",
-   "size": 157341
+   "size": 145361
   },
   {
    "name": "MDX",
@@ -34,14 +29,19 @@
    "size": 137025
   },
   {
+   "name": "HTML",
+   "color": "#e34c26",
+   "size": 107649
+  },
+  {
    "name": "Rust",
    "color": "#dea584",
-   "size": 80376
+   "size": 68081
   },
   {
    "name": "Python",
    "color": "#3572A5",
-   "size": 7754
+   "size": 37178
   },
   {
    "name": "Shell",
@@ -52,12 +52,7 @@
    "name": "NSIS",
    "color": null,
    "size": 192
-  },
-  {
-   "name": "Vue",
-   "color": "#41b883",
-   "size": 183
   }
  ],
- "fetched_at": "2026-09-14T08:25:09Z"
+ "fetched_at": "2026-09-14T08:25:29Z"
 }
