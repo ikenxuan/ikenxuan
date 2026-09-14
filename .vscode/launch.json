@@ -1,0 +1,36 @@
+{
+  // F5 的启动配置。
+  //
+  // 必须用 "module": "generator.main" 而不是直接运行 main.py，原因是 Python
+  // 的导入规则：执行 `python 某文件.py` 时，Python 只把"那个文件所在的文件夹"
+  // 加进模块搜索路径，也就是 generator\ 本身。而 main.py 里写的是
+  // `from generator import ...`，它需要的是"项目根目录"在搜索路径里，于是
+  // 找不到，报 No module named 'generator'。
+  //
+  // `python -m generator.main` 这个形式会把"当前工作目录"加进搜索路径，
+  // 所以能正常工作。下面的 "module" + "cwd" 两个字段就是在复现这个行为。
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "生成卡片",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "generator.main",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      // 调试时用这个：不联网、直接读 cache/stats.json，秒出结果，
+      // 也不会因为 GitHub API 抽风而干扰你。
+      "name": "生成卡片（离线）",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "generator.main",
+      "args": ["--offline"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    }
+  ]
+}

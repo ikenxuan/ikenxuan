@@ -1,0 +1,33 @@
+[project]
+name = "ikenxuan"
+version = "0.1.0"
+description = "GitHub profile card: the avatar rendered as a glyph-matched ASCII portrait in a terminal frame."
+requires-python = ">=3.12"
+# Ranges here, exact versions in uv.lock. `uv lock --upgrade` is how you move
+# forward deliberately; nothing moves on its own.
+dependencies = [
+    "numpy>=2.5.3",
+    "pillow>=12.1.1",
+    "requests>=2.34.2",
+]
+
+# Moved here from pyrightconfig.json so there is one config file, not two.
+#
+# This project sits at 0 strict diagnostics. It started at 100, and none of them
+# were in the rendering code -- they were `Any` leaking in from three places:
+#
+#   numpy          np.ndarray is ndarray[Any, dtype[Any]]. Annotating the real
+#                  dtype (NDArray[np.float64], NDArray[np.uint8]) is stricter
+#                  AND catches dtype mistakes numpy would otherwise let pass.
+#   GitHub JSON    Was dict[str, Any]. models.py describes the response field by
+#                  field, with one cast at the parse boundary.
+#   empty literals [] and {} infer as list[Unknown] / dict[Unknown, Unknown].
+#                  Annotating them was 6 of the last 11 errors.
+#
+# strict matches the user-level python.analysis.typeCheckingMode, so the editor
+# and CI agree.
+[tool.pyright]
+typeCheckingMode = "strict"
+pythonVersion = "3.12"
+include = ["generator", "tools"]
+exclude = ["cache", "**/__pycache__"]

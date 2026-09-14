@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Build artefacts: local previews, variant contact sheets, reference material.
+# cache/stats.json is the one tracked file in here -- it is the offline fallback
+# for the GitHub API, so a build with no token still produces a real card.
+cache/*
+!cache/stats.json

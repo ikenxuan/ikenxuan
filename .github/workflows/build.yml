@@ -1,0 +1,65 @@
+name: Build profile card
+
+on:
+  push:
+    branches: [main]
+    # The bot's own commit touches only these two files. Without this, that
+    # commit would trigger another build -- which would produce identical output
+    # and commit nothing, so the loop dies out, but ignoring the paths means the
+    # run never starts. Cheaper and clearer than a guard on github.actor, which
+    # would also have to not block the schedule.
+    paths-ignore:
+      - profile.svg
+      - cache/stats.json
+  schedule:
+    # 04:17 UTC daily. Deliberately not on the hour: GitHub queues every job that
+    # asks for :00 at the same instant, and a run scheduled there can sit for
+    # many minutes before a runner picks it up.
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-profile-card
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # No actions/setup-python: uv reads .python-version and fetches that exact
+      # interpreter itself, so the CI Python is the same one used locally.
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        # --locked, not --frozen: --frozen silently uses uv.lock as-is, --locked
+        # additionally fails when pyproject.toml and uv.lock disagree. That is
+        # the check worth having -- it catches a dependency edited without
+        # re-locking, which --frozen would happily paper over.
+        run: uv sync --locked
+
+      # The committed assets/avatar.png is the source, so this step needs no
+      # network besides the stats call. GITHUB_TOKEN covers the public profile
+      # data the card shows. If that call ever starts failing, stats.collect
+      # falls back to cache/stats.json and the build still succeeds with a
+      # one-day-old card rather than going red.
+      - name: Generate profile.svg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: uv run --locked python -m generator.main
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add profile.svg cache/stats.json
+          git diff --staged --quiet || git commit -m "chore: rebuild profile card"
+          git push
