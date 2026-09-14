@@ -3,11 +3,15 @@
 USERNAME = "ikenxuan"
 
 # --- avatar source ---
-# The avatar is committed so a build never depends on GitHub's CDN staying up or
-# on the image being byte-identical to what it served last week. --refresh re-fetches.
-AVATAR_LOCAL_PATH = "assets/avatar.png"
+# Fetched on every build rather than committed. A committed copy would freeze
+# the portrait: changing the avatar would need a manual re-fetch and a commit
+# before the card caught up. github.com/{user}.png redirects to the avatar CDN,
+# and requests follows that. The last fetch is cached locally as a fallback for
+# a CDN hiccup or an --offline run; that cache is not committed, so a fresh
+# checkout has no portrait until its first successful fetch.
 AVATAR_URL = "https://github.com/{user}.png?size={size}"
-AVATAR_FETCH_SIZE = 460
+AVATAR_FETCH_SIZE = 460     # 460 is the largest size the endpoint serves
+AVATAR_CACHE_PATH = "cache/avatar.png"
 
 # --- portrait: glyph matching ---
 # Characters are picked by matching each cell against pre-rendered glyph coverage

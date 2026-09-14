@@ -1,6 +1,9 @@
 """Build profile.svg.
 
-    python -m generator.main [--refresh] [--offline]
+    python -m generator.main [--offline]
+
+--offline uses the cached avatar and stats and touches no network, which is what
+you want while iterating on how the card looks.
 """
 import pathlib
 import sys
@@ -9,9 +12,11 @@ from generator import avatar, config, render, stats
 
 
 def main(argv: list[str]) -> int:
-    image = avatar.load_avatar(refresh="--refresh" in argv)
+    offline = "--offline" in argv
+
+    image = avatar.load_avatar(offline=offline)
     grid = avatar.build_grid(image)
-    data = stats.collect(offline="--offline" in argv)
+    data = stats.collect(offline=offline)
     svg = render.render(grid, data)
 
     out = pathlib.Path(config.OUTPUT_PATH)

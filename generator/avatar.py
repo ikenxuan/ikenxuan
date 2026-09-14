@@ -20,15 +20,32 @@ def fetch_avatar(username: str, size: int = config.AVATAR_FETCH_SIZE) -> Image.I
     return Image.open(io.BytesIO(response.content)).convert("RGB")
 
 
-def load_avatar(refresh: bool = False) -> Image.Image:
-    """Committed copy first, network only as a fallback or on --refresh."""
-    local = pathlib.Path(config.AVATAR_LOCAL_PATH)
-    if local.exists() and not refresh:
-        return Image.open(local).convert("RGB")
+def load_avatar(offline: bool = False) -> Image.Image:
+    """Fetch the avatar, falling back to the last fetched copy.
 
-    image = fetch_avatar(config.USERNAME)
-    local.parent.mkdir(parents=True, exist_ok=True)
-    image.save(local)
+    Fetching rather than committing the image means a changed avatar reaches the
+    card on its own. The fallback covers a CDN hiccup and --offline runs; the
+    cached copy is deliberately not committed.
+    """
+    cache = pathlib.Path(config.AVATAR_CACHE_PATH)
+
+    if offline:
+        if not cache.exists():
+            raise RuntimeError(
+                f"--offline given but no cached avatar at {cache}. Run once "
+                f"without --offline to fetch one.")
+        return Image.open(cache).convert("RGB")
+
+    try:
+        image = fetch_avatar(config.USERNAME)
+    except (RuntimeError, requests.RequestException) as error:
+        if not cache.exists():
+            raise
+        print(f"Avatar fetch failed ({error}); using the cached copy.")
+        return Image.open(cache).convert("RGB")
+
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    image.save(cache)
     return image
 
 

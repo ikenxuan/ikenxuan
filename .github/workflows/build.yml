@@ -46,16 +46,19 @@ jobs:
         # re-locking, which --frozen would happily paper over.
         run: uv sync --locked
 
-      # The committed assets/avatar.png is the source, so this step needs no
-      # network besides the stats call.
+      # This step reaches the network twice: github.com/{user}.png for the
+      # portrait and api.github.com for the stats. Both are cached under cache/,
+      # which is not committed, so a fresh checkout needs both to succeed. If the
+      # avatar CDN has a bad minute the step fails rather than rendering a card
+      # with no face on it.
       #
-      # ACCESS_TOKEN (a personal token with read:user) is what this needs. The
-      # default GITHUB_TOKEN is an installation token for this one repository:
-      # asking it for the account's repositories returns only the repos it can
-      # see, with HTTP 200 and no error, which would write wrong numbers onto
-      # the card. It is kept as a fallback so the job still runs before the
-      # secret exists -- stats.collect rejects the partial result and keeps the
-      # cached figures instead.
+      # ACCESS_TOKEN (a personal token with read:user) is what the stats call
+      # needs. The default GITHUB_TOKEN is an installation token for this one
+      # repository: asking it for the account's repositories returns only the
+      # repos it can see, with HTTP 200 and no error, which would write wrong
+      # numbers onto the card. It is kept as a fallback so the job still runs
+      # before the secret exists -- stats.collect rejects the partial result and
+      # keeps the cached figures instead.
       - name: Generate profile.svg
         env:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN || secrets.GITHUB_TOKEN }}
