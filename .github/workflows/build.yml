@@ -47,13 +47,18 @@ jobs:
         run: uv sync --locked
 
       # The committed assets/avatar.png is the source, so this step needs no
-      # network besides the stats call. GITHUB_TOKEN covers the public profile
-      # data the card shows. If that call ever starts failing, stats.collect
-      # falls back to cache/stats.json and the build still succeeds with a
-      # one-day-old card rather than going red.
+      # network besides the stats call.
+      #
+      # ACCESS_TOKEN (a personal token with read:user) is what this needs. The
+      # default GITHUB_TOKEN is an installation token for this one repository:
+      # asking it for the account's repositories returns only the repos it can
+      # see, with HTTP 200 and no error, which would write wrong numbers onto
+      # the card. It is kept as a fallback so the job still runs before the
+      # secret exists -- stats.collect rejects the partial result and keeps the
+      # cached figures instead.
       - name: Generate profile.svg
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN || secrets.GITHUB_TOKEN }}
         run: uv run --locked python -m generator.main
 
       - name: Commit if changed

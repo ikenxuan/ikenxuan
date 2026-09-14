@@ -42,7 +42,9 @@ query($login: String!) {
 
 
 def _token() -> str | None:
-    for name in ("GITHUB_TOKEN", "GH_TOKEN"):
+    # ACCESS_TOKEN first: a personal token sees the whole account, where an
+    # Actions GITHUB_TOKEN sees only the repository it was issued for.
+    for name in ("ACCESS_TOKEN", "GITHUB_TOKEN", "GH_TOKEN"):
         value = os.environ.get(name)
         if value:
             return value
@@ -117,20 +119,20 @@ def _write_cache(stats: ProfileStats) -> None:
 
 
 def collect(login: str = config.USERNAME, offline: bool = False) -> ProfileStats:
+    cached = _read_cache()
+
     if offline:
-        cached = _read_cache()
         if cached is None:
             raise RuntimeError("--offline given but no cache at " + config.STATS_CACHE_PATH)
         return cached
 
     token = _token()
     if token is None:
-        cached = _read_cache()
         if cached is None:
             raise RuntimeError(
                 "No GitHub token found and no cache to fall back on.\n"
-                "Set GITHUB_TOKEN, log in with `gh auth login`, or run with --offline "
-                "after a successful fetch.")
+                "Set ACCESS_TOKEN or GITHUB_TOKEN, log in with `gh auth login`, or "
+                "run with --offline after a successful fetch.")
         print("No GitHub token; using cached stats.")
         return cached
 
@@ -138,11 +140,20 @@ def collect(login: str = config.USERNAME, offline: bool = False) -> ProfileStats
         stats = _aggregate(_fetch(login, token))
     except (RuntimeError, requests.RequestException) as error:
         # A nightly build should not go red because GitHub had a bad minute. The
-        # card is then a day stale, which the "fetched_at" field makes visible.
-        cached = _read_cache()
+        # card is then a day stale, which "fetched_at" makes visible.
         if cached is None:
             raise
         print(f"GitHub API unavailable ({error}); using cached stats.")
+        return cached
+
+    # The API answers under-scoped tokens with partial data and a 200, so this
+    # cannot be caught by status code. Compare against the cache instead.
+    if cached is not None and stats["repos"] < cached["repos"] * config.STATS_MIN_REPO_RATIO:
+        print(f"Fetched {stats['repos']} repositories, but the cache has "
+              f"{cached['repos']}. That size of drop means the token cannot see "
+              f"every repository -- an Actions GITHUB_TOKEN only sees its own. "
+              f"Keeping cached stats. Set an ACCESS_TOKEN secret with read:user "
+              f"scope to fix this.")
         return cached
 
     _write_cache(stats)

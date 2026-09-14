@@ -122,5 +122,11 @@ COMMITS_LABEL = "last 12 months"
 STATS_CACHE_PATH = "cache/stats.json"
 GITHUB_API = "https://api.github.com/graphql"
 GITHUB_TIMEOUT_SECONDS = 30
+# Guard against a silently under-scoped token. An Actions GITHUB_TOKEN is an
+# installation token for one repository: querying repositories through it
+# returns only the repos that token can see, with HTTP 200 and no error, which
+# would overwrite good cached numbers with wrong ones. A drop this large is a
+# permission problem rather than a real change, so the cache wins.
+STATS_MIN_REPO_RATIO = 0.5
 
 OUTPUT_PATH = "profile.svg"
